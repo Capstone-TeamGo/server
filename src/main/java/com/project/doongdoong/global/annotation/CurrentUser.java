@@ -1,4 +1,4 @@
-package com.project.doongdoong.global;
+package com.project.doongdoong.global.annotation;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 

@@ -3,7 +3,7 @@ package com.project.doongdoong.domain.counsel.controller;
 import com.project.doongdoong.domain.counsel.dto.request.CounselCreateRequest;
 import com.project.doongdoong.domain.counsel.dto.response.CounselResultResponse;
 import com.project.doongdoong.domain.counsel.service.CounselService;
-import com.project.doongdoong.global.CurrentUser;
+import com.project.doongdoong.global.annotation.CurrentUser;
 import com.project.doongdoong.global.common.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

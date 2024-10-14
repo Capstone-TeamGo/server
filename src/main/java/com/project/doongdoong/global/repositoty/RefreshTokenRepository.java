@@ -1,10 +1,7 @@
 package com.project.doongdoong.global.repositoty;
 
-import com.project.doongdoong.domain.user.model.SocialType;
-import com.project.doongdoong.global.RefreshToken;
-import org.springframework.data.jpa.repository.Query;
+import com.project.doongdoong.global.common.RefreshToken;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

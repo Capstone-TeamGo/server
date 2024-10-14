@@ -1,7 +1,7 @@
 package com.project.doongdoong.domain.user.controller;
 
 import com.project.doongdoong.domain.user.service.UserService;
-import com.project.doongdoong.global.CurrentUser;
+import com.project.doongdoong.global.annotation.CurrentUser;
 import com.project.doongdoong.global.common.ApiResponse;
 import com.project.doongdoong.global.dto.request.LogoutDto;
 import com.project.doongdoong.global.dto.request.OAuthTokenDto;

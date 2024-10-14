@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component @Slf4j
+// @Component // 결제 문제로 일단 사용 X
+@Slf4j
 @RequiredArgsConstructor
 @Profile("!test")
 public class InitProvider {

@@ -1,4 +1,4 @@
-package com.project.doongdoong.global;
+package com.project.doongdoong.global.annotation;
 
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

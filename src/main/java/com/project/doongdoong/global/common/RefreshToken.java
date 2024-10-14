@@ -1,6 +1,5 @@
-package com.project.doongdoong.global;
+package com.project.doongdoong.global.common;
 
-import com.project.doongdoong.domain.user.model.SocialType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -17,8 +17,7 @@ public class AnaylsisResponseDto {
     private List<String> questionContent;
 
     @Builder
-    public AnaylsisResponseDto(Long analysisId, double feelingState, String time, List<String> questionContent
-            , List<String> questionContentVoiceUrls, List<String> answerContent) {
+    public AnaylsisResponseDto(Long analysisId, double feelingState, String time, List<String> questionContent) {
         this.analysisId = analysisId;
         this.time = time;
         this.feelingState = feelingState;

@@ -1,4 +1,4 @@
-package com.project.doongdoong.domain;
+package com.project.doongdoong.module;
 
 import com.project.doongdoong.domain.voice.service.VoiceService;
 import com.project.doongdoong.global.util.WebClientUtil;

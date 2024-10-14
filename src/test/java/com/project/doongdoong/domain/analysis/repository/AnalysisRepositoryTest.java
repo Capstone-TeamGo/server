@@ -1,19 +1,25 @@
 package com.project.doongdoong.domain.analysis.repository;
 
-import com.project.doongdoong.domain.IntegrationSupportTest;
+import com.project.doongdoong.module.IntegrationSupportTest;
 import com.project.doongdoong.domain.analysis.dto.response.FeelingStateResponseDto;
 import com.project.doongdoong.domain.analysis.model.Analysis;
+import com.project.doongdoong.domain.answer.model.Answer;
+import com.project.doongdoong.domain.answer.repository.AnswerRepository;
 import com.project.doongdoong.domain.question.model.Question;
 import com.project.doongdoong.domain.question.model.QuestionContent;
 import com.project.doongdoong.domain.question.repository.QuestionRepository;
 import com.project.doongdoong.domain.user.model.SocialType;
 import com.project.doongdoong.domain.user.model.User;
 import com.project.doongdoong.domain.user.repository.UserRepository;
+import com.project.doongdoong.domain.voice.model.Voice;
+import com.project.doongdoong.domain.voice.repository.VoiceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +33,8 @@ class AnalysisRepositoryTest extends IntegrationSupportTest {
     @Autowired AnalysisRepository analysisRepository;
     @Autowired QuestionRepository questionRepository;
     @Autowired UserRepository userRepository;
+    @Autowired AnswerRepository answerRepository;
+    @Autowired VoiceRepository voiceRepository;
 
     @Test
     @DisplayName("접근 회원과 고유 분석 번호를 통해 일치하는 분석 정보를 조회합니다.")
@@ -50,6 +58,51 @@ class AnalysisRepositoryTest extends IntegrationSupportTest {
         assertThat(findAnalysis.get().getUser())
                 .isNotNull()
                 .isEqualTo(savedUser);
+
+    }
+
+    @Test
+    @DisplayName("사용자의 분석 결과를 최신순으로 페이징 조회합니다.")
+    void findAllByUserOrderByCreatedTime(){
+        //given
+        User user = createUser("socialId", SocialType.APPLE);
+        User savedUser = userRepository.save(user);
+        int pageNumber = 1;
+        int pageSize = 5;
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+
+        Analysis analysis1 = createAnalysis(user);
+        Analysis analysis2 = createAnalysis(user);
+        Analysis analysis3 = createAnalysis(user);
+        Analysis analysis4 = createAnalysis(user);
+        Analysis analysis5 = createAnalysis(user);
+        Analysis analysis6 = createAnalysis(user);
+        Analysis analysis7 = createAnalysis(user);
+        analysis1.changeFeelingStateAndAnalyzeTime(10, null);
+        analysis2.changeFeelingStateAndAnalyzeTime(20, null);
+        analysis3.changeFeelingStateAndAnalyzeTime(30, null);
+        analysis4.changeFeelingStateAndAnalyzeTime(40, null);
+        analysis5.changeFeelingStateAndAnalyzeTime(50, null);
+        analysis6.changeFeelingStateAndAnalyzeTime(60, null);
+        analysis7.changeFeelingStateAndAnalyzeTime(70, null);
+
+        analysisRepository.saveAll(List.of(analysis1, analysis2, analysis3, analysis4, analysis5, analysis6, analysis7));
+
+        //when
+        Page<Analysis> result = analysisRepository.findAllByUserOrderByCreatedTime(savedUser, pageRequest);
+
+        //then
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.getTotalElements()).isEqualTo(7);
+        assertThat(result.getContent())
+                .hasSize(2)
+                .extracting("user.socialId", "feelingState")
+                .containsExactly(
+                        tuple("socialId", 60.0),
+                        tuple("socialId", 70.0)
+                );
+
+
 
     }
 
@@ -151,6 +204,77 @@ class AnalysisRepositoryTest extends IntegrationSupportTest {
                 .hasSize(questions.size())
                 .containsExactlyInAnyOrder(question1, question2, question3, question4);
         ;
+    }
+
+
+    /**
+     * QueryDsl Test
+     */
+
+    @Test
+    @DisplayName("음성 답변과 답변 정보가 담긴 분석 정보를 조회한다.")
+    void searchAnalysisWithVoiceOfAnswer(){
+        //given
+        String socialId = "socialId";
+        SocialType socialType = SocialType.APPLE;
+        User user = createUser(socialId, socialType);
+
+        Analysis analysis = createAnalysis(user);
+        userRepository.save(user);
+
+        Voice voice1 = createVoice("파일이름1", QuestionContent.FIXED_QUESTION1);
+        Voice voice2 = createVoice("파일이름2", QuestionContent.FIXED_QUESTION2);
+        Voice voice3 = createVoice("파일이름3", QuestionContent.UNFIXED_QUESTION1);
+        Answer answer1 = createAnswer(voice1, "질문에 대한 답변 텍스트1");
+        Answer answer2 = createAnswer(voice2, "질문에 대한 답변 텍스트2");
+        Answer answer3 = createAnswer(voice3, "질문에 대한 답변 텍스트3");
+        answer1.connectAnalysis(analysis);
+        answer2.connectAnalysis(analysis);
+        answer3.connectAnalysis(analysis);
+
+        voiceRepository.saveAll(List.of(voice1,voice2,voice3));
+        answerRepository.saveAll(List.of(answer1,answer2,answer3));
+        analysisRepository.save(analysis);
+
+        //when
+        Optional<Analysis> result = analysisRepository.searchAnalysisWithVoiceOfAnswer(analysis.getId());
+        //then
+        result.ifPresent(findAnalysis ->{
+            assertThat(findAnalysis).isNotNull();
+            List<Answer> answers = findAnalysis.getAnswers();
+            assertThat(answers).hasSize(3);
+            assertThat(answers)
+                    .extracting("content")
+                    .containsExactlyInAnyOrder(
+                            "질문에 대한 답변 텍스트1",
+                            "질문에 대한 답변 텍스트2",
+                            "질문에 대한 답변 텍스트3"
+                            //"질문에 대한 답변 텍스트4"
+                    );
+            assertThat(answers)
+                    .extracting("voice.originName")
+                    .containsExactlyInAnyOrder(
+                            "파일이름1",
+                            "파일이름2",
+                            "파일이름3"
+                            //"파일이름4"
+                    );
+        });
+    }
+
+
+    private static Voice createVoice(String fileName, QuestionContent questionContent) {
+        return Voice.initVoiceContentBuilder()
+                .originName(fileName)
+                .questionContent(questionContent)
+                .build();
+    }
+
+    private static Answer createAnswer(Voice voice, String content) {
+        return Answer.builder()
+                .voice(voice)
+                .content(content)
+                .build();
     }
 
     private static Question createQuestion(QuestionContent questionContent) {

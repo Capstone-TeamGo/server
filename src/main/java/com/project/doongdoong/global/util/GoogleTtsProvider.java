@@ -1,11 +1,11 @@
 package com.project.doongdoong.global.util;
 
 import com.google.cloud.texttospeech.v1.*;
+import com.project.doongdoong.global.exception.GoogleTtsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.UUID;
 
 @Component @Slf4j
 public class GoogleTtsProvider {

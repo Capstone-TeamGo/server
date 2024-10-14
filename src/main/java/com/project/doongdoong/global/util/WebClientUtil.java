@@ -6,8 +6,8 @@ import com.project.doongdoong.domain.analysis.dto.response.FellingStateCreateRes
 import com.project.doongdoong.domain.voice.model.Voice;
 import com.project.doongdoong.global.dto.response.CounselAiResponse;
 import com.project.doongdoong.global.exception.servererror.ExternalApiCallException;
-import com.project.doongdoong.global.util.dto.ConsultRequest;
-import com.project.doongdoong.global.util.dto.VoiceToS3Request;
+import com.project.doongdoong.global.dto.request.ConsultRequest;
+import com.project.doongdoong.global.dto.request.VoiceToS3Request;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

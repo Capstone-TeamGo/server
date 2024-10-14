@@ -45,11 +45,12 @@ public class AnalysisServiceImp implements AnalysisService{
     private final QuestionService questionService;
     private final VoiceService voiceService;
     private final WebClientUtil webClientUtil;
-    private final static long WEEK_TIME = 60 * 60 * 24 * 7;
 
     private final static int ANALYSIS_PAGE_SIZE = 10;
-    private final static double ANALYSIS_VOICE_RATE = 0.35;
+    private final static double ANALYSIS_VOICE_RATE = 0.65;
     private final static double ANALYSIS_TEXT_RATE = 0.35;
+    private final static String DEFAULT_NO_ANSWER_MESSAGE = "질문에 대한 답변이 없습니다.";
+    private final static String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm";
 
     @Transactional
     @Override //        추가적으로 사용자 정보가 있어야 함.
@@ -107,17 +108,17 @@ public class AnalysisServiceImp implements AnalysisService{
 
         Map<QuestionContent, String> voiceMap = mapVoiceToQuestionInformation(findVoices);
         List<String> questionVoiceAccessUrls = questionContents.stream()
-                .map(voiceMap::get)
+                .map(key -> voiceMap.get(key))
                 .collect(Collectors.toList());
 
         List<String> answerContents = questions.stream()
                 .map(question -> Optional.ofNullable(question.getAnswer())
                         .map(answer -> answer.getContent())
-                        .orElse(null))
+                        .orElse(DEFAULT_NO_ANSWER_MESSAGE))
                 .collect(Collectors.toList());
 
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_FORMAT);
 
         return AnalysisDetailResponse.builder()
                 .analysisId(findAnalysis.getId())
@@ -162,7 +163,7 @@ public class AnalysisServiceImp implements AnalysisService{
         PageRequest pageable = PageRequest.of(pageNumber, ANALYSIS_PAGE_SIZE);
         Page<Analysis> analysisPages = analsisRepository.findAllByUserOrderByCreatedTime(user, pageable);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_FORMAT);
 
 
         return AnaylsisListResponseDto.builder()
@@ -221,10 +222,10 @@ public class AnalysisServiceImp implements AnalysisService{
                 .map(answer -> answer.getVoice())
                 .collect(Collectors.toList());
 
-        if(voices.size() != MAX_ANSWER_COUNT){ //만약 모든 질문에 대한 답변이 없는 경우, 답변이 부족하다는 예외 발생
+        if(isAllAnswerdBy(voices)){ //만약 모든 질문에 대한 답변이 없는 경우, 답변이 부족하다는 예외 발생
             throw new AllAnswersNotFoundException();
         }
-        if (Optional.of(findAnalysis.getAnalyzeTime()).isPresent()) { // 분석은 1번만 가능
+        if (isAlreadyAnalyzed(findAnalysis)) { // 분석은 1번만 가능
             throw new AlreadyAnalyzedException();
         }
 
@@ -236,14 +237,8 @@ public class AnalysisServiceImp implements AnalysisService{
             answers.get(i).changeContent(responseByText.get(i).getTranscribedText());
         }
 
-        double resultByText = responseByText.stream() // 3. 처리가 끝나면 double값 4개 값을 평균 내서 감정 수치 값 반환하기
-                .mapToDouble(value -> value.getFeelingState())
-                .average()
-                .getAsDouble();
-        double resultByVoice = responseByVoice.stream()
-                .mapToDouble(value -> value.getFeelingState())
-                .average()
-                .getAsDouble();
+        double resultByText = caluateFellingStatusAverage(responseByText);
+        double resultByVoice = caluateFellingStatusAverage(responseByVoice);
         double result = ANALYSIS_TEXT_RATE * resultByText + ANALYSIS_VOICE_RATE * resultByVoice;
 
         findAnalysis.changeFeelingStateAndAnalyzeTime(result, LocalDate.now());
@@ -253,9 +248,24 @@ public class AnalysisServiceImp implements AnalysisService{
                 .build();
     }
 
+    private double caluateFellingStatusAverage(List<FellingStateCreateResponse> responseByText) {
+        return responseByText.stream() // 3. 처리가 끝나면 double값 4개 값을 평균 내서 감정 수치 값 반환하기
+                .mapToDouble(value -> value.getFeelingState())
+                .average()
+                .getAsDouble();
+    }
+
+    private boolean isAllAnswerdBy(List<Voice> voices) {
+        return voices.size() != MAX_ANSWER_COUNT;
+    }
+
+    private boolean isAlreadyAnalyzed(Analysis findAnalysis) {
+        return findAnalysis.getAnalyzeTime() != null ? true : false;
+    }
+
     private boolean checkFirstGrowthToday(User user) {
         List<Analysis> list = user.getAnalysisList().stream()
-                .filter(analysis ->   analysis.getAnalyzeTime().equals(LocalDate.now()))
+                .filter(analysis ->   LocalDate.now().equals(analysis.getAnalyzeTime()))
                 .collect(Collectors.toList());
         return list.size() == 0 ? true : false;
     }

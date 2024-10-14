@@ -1,4 +1,4 @@
-package com.project.doongdoong.global.util;
+package com.project.doongdoong.global.exception;
 
 import com.project.doongdoong.global.exception.CustomException;
 import com.project.doongdoong.global.exception.ErrorType;

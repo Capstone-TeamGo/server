@@ -1,4 +1,4 @@
-package com.project.doongdoong.global.util.dto;
+package com.project.doongdoong.global.dto.request;
 
 import lombok.Builder;
 import lombok.Getter;

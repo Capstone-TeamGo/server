@@ -1,6 +1,6 @@
 package com.project.doongdoong.domain.counsel.service;
 
-import com.project.doongdoong.domain.IntegrationSupportTest;
+import com.project.doongdoong.module.IntegrationSupportTest;
 import com.project.doongdoong.domain.analysis.exception.AnalysisAccessDeny;
 import com.project.doongdoong.domain.analysis.model.Analysis;
 import com.project.doongdoong.domain.analysis.repository.AnalysisRepository;
@@ -12,15 +12,9 @@ import com.project.doongdoong.domain.user.model.SocialType;
 import com.project.doongdoong.domain.user.model.User;
 import com.project.doongdoong.domain.user.repository.UserRepository;
 import com.project.doongdoong.global.dto.response.CounselAiResponse;
-import com.project.doongdoong.global.util.WebClientUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 
